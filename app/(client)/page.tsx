@@ -1,0 +1,146 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Shirt, Scissors, MessageSquare } from "lucide-react";
+import ProductGrid from "@/components/product-grid";
+import CategorySection from "@/components/category-section";
+import CustomPrintSection from "@/components/custom-print-section";
+import { useEffect, useState } from "react";
+import { Product } from "@/lib/types"; // Adjust path if needed
+
+export default function Home() {
+  // inside the component:
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const res = await fetch("/api/products?limit=30&featured=true", {
+          next: { revalidate: 60 }, // Revalidate every 60 seconds
+        });
+        const data = await res.json();
+        setFeaturedProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch featured products:", error);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  return (
+    <div className="container mx-auto px-4">
+      {/* Hero Section */}
+      <section className="relative py-10 md:py-10 ">
+        <div className="absolute inset-0 -z-10 bg-[url('/paper-texture.png')] opacity-10"></div>
+        <div className="grid gap-8 md:grid-cols-2 items-center">
+          <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden border-4 border-white shadow-xl">
+            <Image
+              src="/placeholder.svg?height=500&width=500"
+              alt="NiveD Clothing Collection"
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-sd1oqj0Qn2BELzBjbSaVztoHioC5Ox.png"
+              alt="NiveD 01.12 Logo"
+              width={120}
+              height={120}
+              className="absolute bottom-4 right-4"
+            />
+          </div>
+
+          <div className="space-y-6">
+            <h1 className="font-playfair text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
+              Vintage Style, <span className="text-[#c9a55c]">Timeless</span>{" "}
+              Appeal
+            </h1>
+            <p className="text-lg text-gray-700 max-w-md">
+              Handcrafted unisex clothing with a nostalgic touch. Designed and
+              manufactured in Ceylon with care and attention to detail.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                asChild
+                className="bg-black hover:bg-gray-800 text-white border-2 border-black rounded-[255px_15px_225px_15px/15px_225px_15px_255px] hover:shadow-md transition-all"
+              >
+                <Link href="/products">Shop Collection</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-2 border-[#c9a55c] text-[#c9a55c] hover:bg-[#c9a55c]/10 rounded-[255px_15px_225px_15px/15px_225px_15px_255px] transition-all"
+              >
+                <Link href="/custom">Custom Printing</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Categories */}
+      <CategorySection />
+
+      {/* Featured Products */}
+      <section className="py-16">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="font-playfair text-3xl font-bold text-gray-900">
+            Featured Products
+          </h2>
+          <Link
+            href="/products"
+            className="text-[#c9a55c] hover:underline flex items-center gap-1"
+          >
+            View All <ArrowRight size={16} />
+          </Link>
+        </div>
+        <ProductGrid products={featuredProducts} limit={8} />
+      </section>
+
+      {/* Custom Printing */}
+      <CustomPrintSection />
+
+      {/* Trust Badges */}
+      <section className="py-16 bg-gray-50 my-16 border-y border-gray-200">
+        <div className="container mx-auto px-4">
+          <h2 className="font-playfair text-3xl font-bold text-center text-gray-900 mb-12">
+            Why Choose NiveD 01.12
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="w-16 h-16 mx-auto mb-4 bg-[#c9a55c]/10 rounded-full flex items-center justify-center">
+                <Shirt size={32} className="text-[#c9a55c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Quality Materials</h3>
+              <p className="text-gray-600">
+                Carefully selected fabrics for comfort and durability
+              </p>
+            </div>
+            <div className="text-center p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="w-16 h-16 mx-auto mb-4 bg-[#c9a55c]/10 rounded-full flex items-center justify-center">
+                <Scissors size={32} className="text-[#c9a55c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Handcrafted</h3>
+              <p className="text-gray-600">
+                Each piece is made with attention to detail and care
+              </p>
+            </div>
+            <div className="text-center p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="w-16 h-16 mx-auto mb-4 bg-[#c9a55c]/10 rounded-full flex items-center justify-center">
+                <MessageSquare size={32} className="text-[#c9a55c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Personal Service</h3>
+              <p className="text-gray-600">
+                Direct communication for a personalized shopping experience
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
