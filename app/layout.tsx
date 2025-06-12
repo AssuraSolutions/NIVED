@@ -18,8 +18,11 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable} font-sans`}>
+    <html lang="en">
+      <body
+        suppressHydrationWarning
+        className={`${inter.variable} ${playfair.variable} font-sans`}
+      >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}
         </ThemeProvider>
