@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
@@ -12,7 +13,7 @@ import type { Product } from "@/lib/types";
 import ProductModal from "./product-modal";
 
 interface ProductGridProps {
-  products: Product[];
+  products?: Product[]; // made optional and safer
   showBadges?: boolean;
   limit?: number;
 }
@@ -50,10 +51,21 @@ export default function ProductGrid({
     }
   };
 
+  // Validate product array
+  const productList = Array.isArray(products) ? products : [];
+
+  if (productList.length === 0) {
+    return (
+      <p className="text-center text-sm text-gray-500">
+        No products available.
+      </p>
+    );
+  }
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => {
+        {productList.map((product) => {
           const isInWishlist = items.some((item) => item.id === product.id);
 
           return (
@@ -116,7 +128,7 @@ export default function ProductGrid({
                 </div>
 
                 <div className="p-4">
-                  {/* Open modal on name click */}
+                  {/* Product Name */}
                   <h3
                     className="font-medium text-gray-900 mb-1 hover:text-[#c9a55c] transition-colors cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
@@ -140,7 +152,7 @@ export default function ProductGrid({
         })}
       </div>
 
-      {/* Render modal once, conditionally */}
+      {/* Product Modal */}
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
