@@ -21,6 +21,7 @@ interface ProductGridProps {
 export default function ProductGrid({
   products = [],
   showBadges = true,
+  limit,
 }: ProductGridProps) {
   const { items, addToWishlist, removeFromWishlist } = useWishlist();
   const { toast } = useToast();
@@ -65,7 +66,7 @@ export default function ProductGrid({
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {productList.map((product) => {
+        {productList.slice(0, limit ?? productList.length).map((product) => {
           const isInWishlist = items.some((item) => item.id === product.id);
 
           return (

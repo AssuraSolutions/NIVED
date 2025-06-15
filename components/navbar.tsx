@@ -62,7 +62,7 @@ export default function Navbar() {
             </Sheet>
             <Link href="/" className="flex items-center">
               <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-sd1oqj0Qn2BELzBjbSaVztoHioC5Ox.png"
+                src="/Logo.jpg"
                 alt="NiveD 01.12 Logo"
                 width={50}
                 height={50}
@@ -87,7 +87,7 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -99,7 +99,7 @@ export default function Navbar() {
                 <Moon className="h-5 w-5" />
               )}
               <span className="sr-only">Toggle theme</span>
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="icon"
