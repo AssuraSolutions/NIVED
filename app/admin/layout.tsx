@@ -38,10 +38,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin", label: "Dashboard", icon: <BarChart3 className="h-5 w-5" /> },
     { href: "/admin/clothing", label: "Clothing", icon: <Shirt className="h-5 w-5" /> },
     { href: "/admin/orders", label: "Orders", icon: <ShoppingCart className="h-5 w-5" /> },
-    // { href: "/admin/customers", label: "Customers", icon: <Users className="h-5 w-5" /> },
-    // { href: "/admin/custom-orders", label: "Custom Orders", icon: <MessageSquare className="h-5 w-5" /> },
-    // { href: "/admin/media", label: "Media", icon: <ImageIcon className="h-5 w-5" /> },
-    // { href: "/admin/settings", label: "Settings", icon: <Settings className="h-5 w-5" /> },
+    { href: "/admin/customers", label: "Customers", icon: <Users className="h-5 w-5" /> },
+    { href: "/admin/custom-orders", label: "Custom Orders", icon: <MessageSquare className="h-5 w-5" /> },
+    { href: "/admin/media", label: "Media", icon: <ImageIcon className="h-5 w-5" /> },
+    { href: "/admin/settings", label: "Settings", icon: <Settings className="h-5 w-5" /> },
   ]
 
   return (

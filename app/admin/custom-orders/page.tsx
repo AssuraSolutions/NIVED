@@ -11,9 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, MessageSquare, CheckCircle, Clock, XCircle, Filter, FileImage } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getCustomOrders, updateCustomOrderStatus } from "@/lib/custom-orders"
-import type { CustomOrder } from "@/lib/types"
-// import the correct OrderStatus type if it exists, or define it here if missing
-type OrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+import type { CustomOrder, OrderStatus } from "@/lib/types"
 
 export default function CustomOrdersPage() {
   const { toast } = useToast()
