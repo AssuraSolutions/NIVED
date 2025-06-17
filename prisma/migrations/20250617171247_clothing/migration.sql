@@ -8,7 +8,6 @@ CREATE TABLE "products" (
     "description" TEXT NOT NULL,
     "longDescription" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
-    "category" TEXT NOT NULL,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "availableSizes" TEXT[],
     "colors" TEXT[],
@@ -19,8 +18,18 @@ CREATE TABLE "products" (
     "isPublished" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "clothingTypeId" INTEGER NOT NULL,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ClothingTypes" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+
+    CONSTRAINT "ClothingTypes_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -45,17 +54,11 @@ CREATE TABLE "custom_orders" (
     CONSTRAINT "custom_orders_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "ClothingTypes" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "label" TEXT NOT NULL,
-
-    CONSTRAINT "ClothingTypes_pkey" PRIMARY KEY ("id")
-);
+-- CreateIndex
+CREATE UNIQUE INDEX "ClothingTypes_name_key" ON "ClothingTypes"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "custom_orders_orderNumber_key" ON "custom_orders"("orderNumber");
 
--- CreateIndex
-CREATE UNIQUE INDEX "ClothingTypes_name_key" ON "ClothingTypes"("name");
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_clothingTypeId_fkey" FOREIGN KEY ("clothingTypeId") REFERENCES "ClothingTypes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
