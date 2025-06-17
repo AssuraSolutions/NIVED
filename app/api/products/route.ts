@@ -7,12 +7,17 @@ export async function GET(request: Request) {
     const category = searchParams.get("category")
     const limit = searchParams.get("limit")
     const search = searchParams.get("search")
+    const featured = searchParams.get("featured")
 
     // Build where clause
     const where: any = {
       isPublished: true, // Only show published products
     }
    
+    
+    if (featured === "true") {
+      where.isFeatured = true;
+    }
 
     // Filter by category
     if (category && category !== "all") {
@@ -75,14 +80,13 @@ export async function POST(request: Request) {
         description: body.description,
         longDescription: body.longDescription || body.description,
         price: Number.parseFloat(body.price),
-        category: body.category,
         images: body.images || [],
         availableSizes: body.availableSizes || [],
         colors: body.colors || [],
         tags: body.tags || [],
-        stock: Number.parseInt(body.stock) || 0,
         isLimited: body.isLimited || false,
         isPublished: body.isPublished !== undefined ? body.isPublished : true,
+        clothingType: body.clothingType, // Add this line to include the required property
       },
     })
 
