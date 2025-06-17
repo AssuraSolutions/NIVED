@@ -23,6 +23,7 @@ model Product {
   tags             String[]
   images           String[]
   isLimited        Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
   isPublished      Boolean  @default(false) // Draft vs Published
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -50,6 +51,15 @@ model CustomOrder {
 
   @@map("custom_orders")
 }
+
+
+model ClothingTypes{
+  id          String   @id @default(cuid())
+  name        String   @unique
+  label       String
+
+}
+
 
 enum OrderStatus {
   PENDING
