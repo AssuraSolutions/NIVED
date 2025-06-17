@@ -8,7 +8,6 @@ CREATE TABLE "products" (
     "description" TEXT NOT NULL,
     "longDescription" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
-    "stock" INTEGER NOT NULL DEFAULT 0,
     "availableSizes" TEXT[],
     "colors" TEXT[],
     "tags" TEXT[],

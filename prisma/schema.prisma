@@ -16,7 +16,6 @@ model Product {
   description      String
   longDescription  String?
   price            Float
-  stock            Int            @default(0)
   availableSizes   String[]
   colors           String[]
   tags             String[]
