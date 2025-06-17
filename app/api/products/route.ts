@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const where: any = {
       isPublished: true, // Only show published products
     }
+   
 
     // Filter by category
     if (category && category !== "all") {
