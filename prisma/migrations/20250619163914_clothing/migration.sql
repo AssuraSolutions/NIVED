@@ -23,12 +23,12 @@ CREATE TABLE "products" (
 );
 
 -- CreateTable
-CREATE TABLE "ClothingTypes" (
+CREATE TABLE "clothing_types" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "label" TEXT NOT NULL,
 
-    CONSTRAINT "ClothingTypes_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "clothing_types_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -43,7 +43,7 @@ CREATE TABLE "custom_orders" (
     "color" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "designNotes" TEXT NOT NULL,
-    "designFileUrl" TEXT,
+    "designFileUrl" TEXT[],
     "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
     "estimatedCompletion" TIMESTAMP(3),
     "totalPrice" DOUBLE PRECISION,
@@ -54,10 +54,10 @@ CREATE TABLE "custom_orders" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ClothingTypes_name_key" ON "ClothingTypes"("name");
+CREATE UNIQUE INDEX "clothing_types_name_key" ON "clothing_types"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "custom_orders_orderNumber_key" ON "custom_orders"("orderNumber");
 
 -- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_clothingTypeId_fkey" FOREIGN KEY ("clothingTypeId") REFERENCES "ClothingTypes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_clothingTypeId_fkey" FOREIGN KEY ("clothingTypeId") REFERENCES "clothing_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

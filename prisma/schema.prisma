@@ -40,6 +40,7 @@ model ClothingTypes {
 
   // INVERSE RELATION
   products Product[]
+  @@map("clothing_types")
 }
 
 model CustomOrder {
@@ -53,7 +54,7 @@ model CustomOrder {
   color                String
   quantity             Int         @default(1)
   designNotes          String
-  designFileUrl        String?
+  designFileUrl        String[]
   status               OrderStatus @default(PENDING)
   estimatedCompletion  DateTime?
   totalPrice           Float?
