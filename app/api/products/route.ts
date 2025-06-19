@@ -1,33 +1,43 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get("category")
-    const limit = searchParams.get("limit")
-    const search = searchParams.get("search")
-    const featured = searchParams.get("featured")
+    const { searchParams } = new URL(request.url);
+    const clothingType = searchParams.get("category"); // "category" is actually "clothingType" now
+    const limit = searchParams.get("limit");
+    const search = searchParams.get("search");
+    const featured = searchParams.get("featured");
 
     // Build where clause
     const where: any = {
-      isPublished: true, // Only show published products
-    }
-   
-    
+      isPublished: true,
+    };
+
     if (featured === "true") {
       where.isFeatured = true;
     }
 
-    // Filter by category
-    if (category && category !== "all") {
-      where.category = {
-        equals: category,
-        mode: "insensitive",
+    // Filter by clothingType (category)
+    if (clothingType && clothingType !== "all") {
+      const type = await prisma.clothingTypes.findFirst({
+        where: {
+          name: {
+            equals: clothingType,
+            mode: "insensitive",
+          },
+        },
+      });
+
+      if (type) {
+        where.clothingTypeId = type.id;
+      } else {
+        // If no match, return empty result
+        return NextResponse.json([], { status: 200 });
       }
     }
 
-    // Filter by search
+    // Filter by search term
     if (search) {
       where.OR = [
         {
@@ -42,38 +52,44 @@ export async function GET(request: Request) {
             mode: "insensitive",
           },
         },
-      ]
+      ];
     }
 
-    // Fetch products from database
     const products = await prisma.product.findMany({
       where,
       take: limit ? Number.parseInt(limit) : undefined,
       orderBy: {
         createdAt: "desc",
       },
-    })
+      include: {
+        clothingType: true, // Optional: include clothing type info in the response
+      },
+    });
 
-    return NextResponse.json(products)
+    return NextResponse.json(products);
   } catch (error) {
-    console.error("Error in products API:", error)
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
+    console.error("Error in products API:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json();
 
-    // Validate required fields
-    const requiredFields = ["name", "description", "price", "category"]
+    const requiredFields = ["name", "description", "price", "clothingTypeId"];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 })
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        );
       }
     }
 
-    // Create product in database
     const product = await prisma.product.create({
       data: {
         name: body.name,
@@ -84,15 +100,19 @@ export async function POST(request: Request) {
         availableSizes: body.availableSizes || [],
         colors: body.colors || [],
         tags: body.tags || [],
-        isLimited: body.isLimited || false,
-        isPublished: body.isPublished !== undefined ? body.isPublished : true,
-        clothingType: body.clothingType, // Add this line to include the required property
+        isLimited: body.isLimited ?? false,
+        isPublished: body.isPublished ?? true,
+        isFeatured: body.isFeatured ?? false,
+        clothingTypeId: body.clothingTypeId,
       },
-    })
+    });
 
-    return NextResponse.json(product, { status: 201 })
+    return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error("Error creating product:", error)
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
+    console.error("Error creating product:", error);
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
   }
 }
