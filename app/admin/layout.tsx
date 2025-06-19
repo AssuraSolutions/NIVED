@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import type React from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Package,
   Users,
@@ -18,31 +18,45 @@ import {
   Shirt,
   MessageSquare,
   ImageIcon,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const navItems = [
-    { href: "/admin", label: "Dashboard", icon: <BarChart3 className="h-5 w-5" /> },
-    { href: "/admin/clothing", label: "Clothing", icon: <Shirt className="h-5 w-5" /> },
-    { href: "/admin/orders", label: "Orders", icon: <ShoppingCart className="h-5 w-5" /> },
-    { href: "/admin/customers", label: "Customers", icon: <Users className="h-5 w-5" /> },
-    { href: "/admin/custom-orders", label: "Custom Orders", icon: <MessageSquare className="h-5 w-5" /> },
-    { href: "/admin/media", label: "Media", icon: <ImageIcon className="h-5 w-5" /> },
-    { href: "/admin/settings", label: "Settings", icon: <Settings className="h-5 w-5" /> },
-  ]
+    {
+      href: "/admin",
+      label: "Dashboard",
+      icon: <BarChart3 className="h-10 w-10" />,
+    },
+    {
+      href: "/admin/clothing",
+      label: "Clothing",
+      icon: <Shirt className="h-10 w-10" />,
+    },
+
+    {
+      href: "/admin/custom-orders",
+      label: "Custom Orders",
+      icon: <MessageSquare className="h-10 w-10" />,
+    },
+    // {
+    //   href: "/admin/settings",
+    //   label: "Settings",
+    //   icon: <Settings className="h-5 w-5" />,
+    // },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,7 +69,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             className="rounded-full bg-white shadow-md"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {sidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
       )}
@@ -68,20 +86,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             ? sidebarOpen
               ? "translate-x-0"
               : "-translate-x-full"
-            : "translate-x-0 lg:translate-x-0 -translate-x-full",
+            : " lg:translate-x-0 -translate-x-full"
         )}
       >
         <div className="flex flex-col h-full p-4">
           {/* Admin Header */}
           <div className="flex items-center gap-2 mb-8 px-2">
             <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-sd1oqj0Qn2BELzBjbSaVztoHioC5Ox.png"
+              src="/Logo.jpg"
               alt="NiveD 01.12 Logo"
-              width={40}
-              height={40}
+              width={60}
+              height={60}
             />
             <span className="font-playfair text-xl font-bold tracking-wider">
-              NiveD <span className="text-[#c9a55c] text-sm">Admin</span>
+              NiveD <span className="text-[#c9a55c] text-md ">Admin</span>
             </span>
           </div>
 
@@ -95,7 +113,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     "w-full justify-start px-3 py-2 text-left",
                     pathname === item.href
                       ? "bg-gray-100 text-[#c9a55c] font-medium"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-[#c9a55c]",
+                      : "text-gray-700 hover:bg-gray-50 hover:text-[#c9a55c]"
                   )}
                 >
                   <span className="mr-3">{item.icon}</span>
@@ -131,11 +149,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <main
         className={cn(
           "transition-all duration-300 ease-in-out",
-          mounted ? (sidebarOpen ? "lg:ml-64" : "ml-0") : "lg:ml-64",
+          mounted ? (sidebarOpen ? "lg:ml-64" : "ml-0") : "lg:ml-64"
         )}
       >
         <div className="min-h-screen p-4 pt-16 lg:pt-4">{children}</div>
       </main>
     </div>
-  )
+  );
 }

@@ -5,13 +5,13 @@ const categories = [
   {
     name: "Unisex Collection",
     image: "/uploads/unisex.jpg",
-    link: "/category/unisex",
+    link: "/products?category=unisex",
     description: "T-shirts, Shirts & Trousers",
   },
   {
     name: "Limited Editions",
     image: "/uploads/Limited-Edition.jpg",
-    link: "/category/limited",
+    link: "/products?featured=true",
     description: "Exclusive designs and prints",
   },
 ];
