@@ -28,7 +28,7 @@ model Product {
 
   // RELATION FIELD
   clothingTypeId   Int
-  clothingType     ClothingTypes  @relation(fields: [clothingTypeId], references: [id])
+  clothingType   ClothingTypes @relation(fields: [clothingTypeId], references: [id])
 
   @@map("products")
 }

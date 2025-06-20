@@ -2,18 +2,20 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
   price: number;
-  category: string;
-  images: string[];
-  colors: string[];
   availableSizes: string[];
-  featured?: boolean;
-  bestSeller?: boolean;
-  newArrival?: boolean;
+  colors: string[];
+  tags: string[];
+  images: string[];
+  isLimited: boolean;
+  isFeatured: boolean;
   isPublished: boolean;
-  stock?: number;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+
+  // Relation field
+  clothingTypeId: number;
 }
 
 export type CartItem = {

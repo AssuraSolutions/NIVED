@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,21 +16,39 @@ import { Card, CardContent } from "@/components/ui/card";
 import { X, SlidersHorizontal } from "lucide-react";
 
 interface ProductFiltersProps {
+  filters: {
+    priceRange: [number, number];
+    sizes: string[];
+    colors: string[];
+    clothingTypes: string[];
+    sortBy: string;
+    search: string;
+  };
   onFiltersChange: (filters: any) => void;
   onClearFilters: () => void;
   compact?: boolean;
 }
 
+
+interface ClothingType {
+  id: string;
+  name: string;
+}
+
 export default function ProductFilters({
+  filters,
   onFiltersChange,
   onClearFilters,
   compact = false,
 }: ProductFiltersProps) {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  // const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedClothingTypes, setSelectedClothingTypes] = useState<string[]>(
+    []
+  );
   const [sortBy, setSortBy] = useState("newest");
   const [isExpanded, setIsExpanded] = useState(true);
+  const [clothingTypes, setClothingTypes] = useState<ClothingType[]>([]);
 
   const sizes = [
     "XS",
@@ -38,26 +56,31 @@ export default function ProductFilters({
     "M",
     "L",
     "XL",
-    "XXL",
-    "2T",
-    "3T",
-    "4T",
-    "5T",
-    "6",
-    "8",
-    "10",
-    "12",
+    
   ];
-  // const colors = [
-  //   { name: "black", value: "#000000" },
-  //   { name: "white", value: "#FFFFFF" },
-  //   { name: "gray", value: "#6B7280" },
-  //   { name: "blue", value: "#3B82F6" },
-  //   { name: "red", value: "#EF4444" },
-  //   { name: "green", value: "#10B981" },
-  //   { name: "yellow", value: "#F59E0B" },
-  //   { name: "navy", value: "#1E3A8A" },
-  // ];
+
+
+  useEffect(() => {
+    setPriceRange(filters.priceRange);
+    setSelectedSizes(filters.sizes);
+    setSelectedClothingTypes(filters.clothingTypes);
+    setSortBy(filters.sortBy);
+  }, [filters]);
+
+  
+  useEffect(() => {
+    async function fetchClothingTypes() {
+      try {
+        const res = await fetch("/api/clothing-type");
+        if (!res.ok) throw new Error("Failed to fetch clothing types");
+        const data: ClothingType[] = await res.json();
+        setClothingTypes(data);
+      } catch (error) {
+        console.error("Error loading clothing types:", error);
+      }
+    }
+    fetchClothingTypes();
+  }, []);
 
   const handleSizeChange = (size: string, checked: boolean) => {
     const newSizes = checked
@@ -67,13 +90,19 @@ export default function ProductFilters({
     updateFilters({ sizes: newSizes });
   };
 
-  // const handleColorChange = (color: string, checked: boolean) => {
-  //   const newColors = checked
-  //     ? [...selectedColors, color]
-  //     : selectedColors.filter((c) => c !== color);
-  //   setSelectedColors(newColors);
-  //   updateFilters({ colors: newColors });
-  // };
+  const toggleSize = (size: string) => {
+    const isSelected = selectedSizes.includes(size);
+    handleSizeChange(size, !isSelected);
+  };
+
+  const handleClothingTypeChange = (typeId: string, checked: boolean) => {
+    const newSelected = checked
+      ? [...selectedClothingTypes, typeId]
+      : selectedClothingTypes.filter((id) => id !== typeId);
+
+    setSelectedClothingTypes(newSelected);
+    updateFilters({ clothingTypes: newSelected });
+  };
 
   const handlePriceChange = (value: [number, number]) => {
     setPriceRange(value);
@@ -89,7 +118,7 @@ export default function ProductFilters({
     onFiltersChange({
       priceRange,
       sizes: selectedSizes,
-      // colors: selectedColors,
+      clothingTypes: selectedClothingTypes,
       sortBy,
       search: "",
       ...updates,
@@ -99,14 +128,14 @@ export default function ProductFilters({
   const clearAllFilters = () => {
     setPriceRange([0, 100]);
     setSelectedSizes([]);
-    // setSelectedColors([]);
+    setSelectedClothingTypes([]);
     setSortBy("newest");
     onClearFilters();
   };
 
   const hasActiveFilters =
     selectedSizes.length > 0 ||
-    // selectedColors.length > 0 ||
+    selectedClothingTypes.length > 0 ||
     priceRange[0] > 0 ||
     priceRange[1] < 100;
 
@@ -164,26 +193,6 @@ export default function ProductFilters({
 
       {isExpanded && (
         <>
-          {/* Sort */}
-          {/* <Card className="border-[#c9a55c]/20">
-            <CardContent className="p-4">
-              <Label className="font-medium text-gray-700 mb-3 block">
-                Sort By
-              </Label>
-              <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-[#c9a55c]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="name">Name A-Z</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card> */}
-
           {/* Price Range */}
           <Card className="border-[#c9a55c]/20">
             <CardContent className="p-4">
@@ -226,38 +235,33 @@ export default function ProductFilters({
             </CardContent>
           </Card>
 
-          {/* Sizes */}
+          {/* Sizes single-select dropdown */}
           <Card className="border-[#c9a55c]/20">
             <CardContent className="p-4">
               <Label className="font-medium text-gray-700 mb-4 block">
                 Sizes
               </Label>
-              <div className="grid grid-cols-4 gap-2 mb-3">
-                {sizes.map((size) => (
-                  <div key={size} className="flex items-center justify-center">
-                    <Checkbox
-                      id={`size-${size}`}
-                      checked={selectedSizes.includes(size)}
-                      onCheckedChange={(checked) =>
-                        handleSizeChange(size, checked as boolean)
-                      }
-                      className="sr-only"
-                    />
-                    <Label
-                      htmlFor={`size-${size}`}
-                      className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedSizes.includes(size)
-                          ? "bg-[#c9a55c] text-white border-[#c9a55c]"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-[#c9a55c] hover:bg-[#c9a55c]/5"
-                      }`}
-                    >
+              <Select
+                value={selectedSizes[0] || ""}
+                onValueChange={(value) => {
+                  setSelectedSizes(value ? [value] : []);
+                  updateFilters({ sizes: value ? [value] : [] });
+                }}
+              >
+                <SelectTrigger className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-[#c9a55c]">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sizes.map((size) => (
+                    <SelectItem key={size} value={size}>
                       {size}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              {selectedSizes.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* {selectedSizes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3">
                   {selectedSizes.map((size) => (
                     <Badge
                       key={size}
@@ -267,66 +271,65 @@ export default function ProductFilters({
                       {size}
                       <X
                         className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                        onClick={() => handleSizeChange(size, false)}
+                        onClick={() => toggleSize(size)}
                       />
                     </Badge>
                   ))}
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
 
-          {/* Colors */}
-          {/* <Card className="border-[#c9a55c]/20">
-            <CardContent className="p-4">
+          {/* Clothing Types multi-select checkboxes */}
+          <Card className="border-[#c9a55c]/20">
+            <CardContent className="p-5 ">
               <Label className="font-medium text-gray-700 mb-4 block">
-                Colors
+                Clothing Types
               </Label>
-              <div className="grid grid-cols-4 gap-3 mb-3">
-                {colors.map((color) => (
-                  <div
-                    key={color.name}
-                    className="flex flex-col items-center space-y-2"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-full border-3 cursor-pointer transition-all ${
-                        selectedColors.includes(color.name)
-                          ? "border-[#c9a55c] ring-2 ring-[#c9a55c] ring-offset-2 scale-110"
-                          : "border-gray-300 hover:border-[#c9a55c] hover:scale-105"
-                      } ${color.name === "white" ? "shadow-md" : ""}`}
-                      style={{ backgroundColor: color.value }}
-                      onClick={() =>
-                        handleColorChange(
-                          color.name,
-                          !selectedColors.includes(color.name)
-                        )
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-hidden">
+                {clothingTypes.length === 0 && <p>Loading...</p>}
+                {clothingTypes.map((type) => (
+                  <div key={type.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`clothing-type-${type.id}`}
+                      checked={selectedClothingTypes.includes(type.id)}
+                      onCheckedChange={(checked) =>
+                        handleClothingTypeChange(type.id, checked as boolean)
                       }
                     />
-                    <span className="text-xs capitalize font-medium text-gray-600">
-                      {color.name}
-                    </span>
+                    <Label
+                      htmlFor={`clothing-type-${type.id}`}
+                      className="cursor-pointer"
+                    >
+                      {type.name}
+                    </Label>
                   </div>
                 ))}
               </div>
-              {selectedColors.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {selectedColors.map((color) => (
-                    <Badge
-                      key={color}
-                      variant="secondary"
-                      className="text-xs capitalize bg-[#c9a55c]/10 text-[#c9a55c]"
-                    >
-                      {color}
-                      <X
-                        className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                        onClick={() => handleColorChange(color, false)}
-                      />
-                    </Badge>
-                  ))}
+
+              {/* {selectedClothingTypes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {selectedClothingTypes.map((id) => {
+                    const name =
+                      clothingTypes.find((c) => c.id === id)?.name || id;
+                    return (
+                      <Badge
+                        key={id}
+                        variant="secondary"
+                        className="text-xs bg-[#c9a55c]/10 text-[#c9a55c]"
+                      >
+                        {name}
+                        <X
+                          className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
+                          onClick={() => handleClothingTypeChange(id, false)}
+                        />
+                      </Badge>
+                    );
+                  })}
                 </div>
-              )}
+              )} */}
             </CardContent>
-          </Card> */}
+          </Card>
         </>
       )}
     </div>
