@@ -4,12 +4,13 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const clothingType = searchParams.get("category"); // "category" is actually "clothingType" now
+    console.log("Received search params:", searchParams.toString()); // 🔍 Debug log
+    const clothingTypeIds = searchParams.getAll("clothingTypeIds");
+
     const limit = searchParams.get("limit");
     const search = searchParams.get("search");
     const featured = searchParams.get("featured");
 
-    // Build where clause
     const where: any = {
       isPublished: true,
     };
@@ -18,26 +19,17 @@ export async function GET(request: Request) {
       where.isFeatured = true;
     }
 
-    // Filter by clothingType (category)
-    if (clothingType && clothingType !== "all") {
-      const type = await prisma.clothingTypes.findFirst({
-        where: {
-          name: {
-            equals: clothingType,
-            mode: "insensitive",
-          },
-        },
-      });
+    // ✅ Convert to numbers properly
+    if (clothingTypeIds.length > 0) {
+      const numericIds = clothingTypeIds
+        .map((id) => Number(id.trim()))
+        .filter((id) => !isNaN(id)); // keep valid IDs
 
-      if (type) {
-        where.clothingTypeId = type.id;
-      } else {
-        // If no match, return empty result
-        return NextResponse.json([], { status: 200 });
+      if (numericIds.length > 0) {
+        where.clothingTypeId = { in: numericIds };
       }
     }
 
-    // Filter by search term
     if (search) {
       where.OR = [
         {
@@ -55,14 +47,16 @@ export async function GET(request: Request) {
       ];
     }
 
+    console.log("Final WHERE clause:", where); // 🔍 Debug log
+
     const products = await prisma.product.findMany({
       where,
-      take: limit ? Number.parseInt(limit) : undefined,
+      take: limit ? Number(limit) : undefined,
       orderBy: {
         createdAt: "desc",
       },
       include: {
-        clothingType: true, // Optional: include clothing type info in the response
+        clothingType: true,
       },
     });
 

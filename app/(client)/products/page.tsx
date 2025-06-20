@@ -20,6 +20,7 @@ export default function ProductsPage() {
     priceRange: [0, 5000] as [number, number],
     sizes: [] as string[],
     colors: [] as string[],
+    clothingTypes: [] as string[],
     sortBy: "newest",
     search: "",
   });
@@ -39,8 +40,14 @@ export default function ProductsPage() {
       if (activeCategory !== "all") {
         params.append("category", activeCategory);
       }
+      currentFilters.clothingTypes.forEach((id) => {
+        params.append("clothingTypeIds", id); 
+      });
+
+      console.log("Product fetch URL:", `/api/products?${params.toString()}`);
 
       const response = await fetch(`/api/products?${params.toString()}`);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -52,6 +59,7 @@ export default function ProductsPage() {
       setProducts([]);
     } finally {
       setIsLoading(false);
+      
     }
   };
 
@@ -91,6 +99,15 @@ export default function ProductsPage() {
         product.colors?.some((color) => currentFilters.colors.includes(color))
       );
     }
+
+    if (
+      Array.isArray(currentFilters.clothingTypes) &&
+      currentFilters.clothingTypes.length > 0
+    ) {
+      filtered = filtered.filter((product) =>
+        currentFilters.clothingTypes.includes(String(product.clothingTypeId))
+      );
+    }
     
 
     switch (currentFilters.sortBy) {
@@ -112,6 +129,7 @@ export default function ProductsPage() {
   };
 
   const handleFiltersChange = (filters: Partial<typeof currentFilters>) => {
+    console.log("FILTER CHANGED:", filters);
     setCurrentFilters((prev) => ({
       ...prev,
       ...filters,
@@ -120,6 +138,7 @@ export default function ProductsPage() {
       priceRange: filters.priceRange ?? [0, 5000],
       sortBy: filters.sortBy ?? "newest",
       search: filters.search ?? "",
+      clothingTypes: filters.clothingTypes ?? [],
     }));
   };
   
@@ -130,6 +149,7 @@ export default function ProductsPage() {
       colors: [],
       sortBy: "newest",
       search: "",
+      clothingTypes: [],
     });
     setSearchTerm("");
   };
@@ -162,46 +182,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* <div className="mb-8">
-            <Tabs
-              value={activeCategory}
-              onValueChange={setActiveCategory}
-              className="w-full"
-            >
-              <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] h-auto p-1 bg-white/80 backdrop-blur-sm">
-                <TabsTrigger
-                  value="all"
-                  className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] data-[state=active]:bg-[#c9a55c] data-[state=active]:text-white font-medium"
-                >
-                  All
-                </TabsTrigger> */}
-          {/* <TabsTrigger
-                  value="unisex"
-                  className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] data-[state=active]:bg-[#c9a55c] data-[state=active]:text-white font-medium"
-                >
-                  Unisex
-                </TabsTrigger>
-                <TabsTrigger
-                  value="men"
-                  className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] data-[state=active]:bg-[#c9a55c] data-[state=active]:text-white font-medium"
-                >
-                  Men
-                </TabsTrigger>
-                <TabsTrigger
-                  value="women"
-                  className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] data-[state=active]:bg-[#c9a55c] data-[state=active]:text-white font-medium"
-                >
-                  Women
-                </TabsTrigger>
-                <TabsTrigger
-                  value="kids"
-                  className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] data-[state=active]:bg-[#c9a55c] data-[state=active]:text-white font-medium"
-                >
-                  Kids
-                </TabsTrigger> */}
-          {/* </TabsList>
-            </Tabs>
-          </div> */}
+          {/* Filters and Product Grid */}
 
           <div className="flex gap-8">
             <div
@@ -211,6 +192,7 @@ export default function ProductsPage() {
             >
               <div className="bg-white/80 backdrop-blur-sm rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] p-6 sticky top-4">
                 <ProductFilters
+                  filters={currentFilters}
                   onFiltersChange={handleFiltersChange}
                   onClearFilters={handleClearFilters}
                 />
@@ -238,6 +220,7 @@ export default function ProductsPage() {
                 <div className="mb-6 flex justify-center lg:justify-end gap-1">
                   <div className="hidden lg:block ">
                     <ProductFilters
+                      filters={currentFilters}
                       onFiltersChange={handleFiltersChange}
                       onClearFilters={handleClearFilters}
                       compact
