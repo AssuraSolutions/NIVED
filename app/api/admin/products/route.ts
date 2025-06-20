@@ -11,9 +11,11 @@ export async function GET(request: Request) {
     const where: any = {}
 
     if (category && category !== "all") {
-      where.category = {
-        equals: category,
-        mode: "insensitive",
+      where.clothingType = {
+        name: {
+          equals: category,
+          mode: "insensitive",
+        },
       }
     }
 
@@ -38,14 +40,26 @@ export async function GET(request: Request) {
       where.isPublished = isPublished === "true"
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
 
-    return NextResponse.json(products)
+    const [products, clothingTypes] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          clothingType: true,
+        },
+      }),
+      prisma.clothingTypes.findMany({
+        select: {
+          id: true,
+          label: true,
+        },
+      }),
+    ])
+
+    return NextResponse.json({ products, clothingTypes })
   } catch (error) {
     console.error("Error in admin products API:", error)
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
@@ -62,12 +76,11 @@ export async function POST(request: Request) {
         description: body.description,
         longDescription: body.longDescription || null,
         price: Number.parseFloat(body.price),
-        category: body.category,
+        clothingTypeId: Number(body.clothingTypeId), // required: must match a real ClothingType ID
         images: Array.isArray(body.images) ? body.images : [],
         availableSizes: Array.isArray(body.availableSizes) ? body.availableSizes : [],
         colors: Array.isArray(body.colors) ? body.colors : [],
         tags: Array.isArray(body.tags) ? body.tags : [],
-        stock: Number.parseInt(body.stock) || 0,
         isLimited: Boolean(body.isLimited),
         isPublished: Boolean(body.isPublished),
       },
