@@ -4,17 +4,36 @@ import { prisma } from "@/lib/prisma"
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
+
     const category = searchParams.get("category")
     const search = searchParams.get("search")
     const isPublished = searchParams.get("isPublished")
+    const page = parseInt(searchParams.get("page") || "1", 10)
+    const limit = parseInt(searchParams.get("limit") || "20", 10)
+    const skip = (page - 1) * limit
+
+    let clothingTypeIdsMatchingSearch: number[] = []
+
+    //Search 
+    if (search) {
+      const matchingClothingTypes = await prisma.clothingTypes.findMany({
+        where: {
+          label: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        select: { id: true },
+      })
+
+      clothingTypeIdsMatchingSearch = matchingClothingTypes.map((type) => type.id)
+    }
 
     const where: any = {}
 
-    if (category && category !== "all") {
-      where.category = {
-        equals: category,
-        mode: "insensitive",
-      }
+    const categoryId = Number(category)
+    if (category && category !== "all" && !isNaN(categoryId)) {
+      where.clothingTypeId = categoryId
     }
 
     if (search) {
@@ -31,6 +50,9 @@ export async function GET(request: Request) {
             mode: "insensitive",
           },
         },
+        ...(clothingTypeIdsMatchingSearch.length > 0
+          ? [{ clothingTypeId: { in: clothingTypeIdsMatchingSearch } }]
+          : []),
       ]
     }
 
@@ -38,14 +60,25 @@ export async function GET(request: Request) {
       where.isPublished = isPublished === "true"
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
+  const [products, clothingTypes, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          clothingType: true,
+        },
+      }),
+      prisma.clothingTypes.findMany({
+        select: { id: true, label: true },
+      }),
+      prisma.product.count({ where }), // total count for hasNextPage
+    ])
 
-    return NextResponse.json(products)
+    const hasNextPage = skip + limit < totalCount
+
+    return NextResponse.json({ products, clothingTypes, hasNextPage, totalCount })
   } catch (error) {
     console.error("Error in admin products API:", error)
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
@@ -62,12 +95,11 @@ export async function POST(request: Request) {
         description: body.description,
         longDescription: body.longDescription || null,
         price: Number.parseFloat(body.price),
-        category: body.category,
+        clothingTypeId: Number(body.clothingTypeId),
         images: Array.isArray(body.images) ? body.images : [],
         availableSizes: Array.isArray(body.availableSizes) ? body.availableSizes : [],
         colors: Array.isArray(body.colors) ? body.colors : [],
         tags: Array.isArray(body.tags) ? body.tags : [],
-        stock: Number.parseInt(body.stock) || 0,
         isLimited: Boolean(body.isLimited),
         isPublished: Boolean(body.isPublished),
       },
