@@ -3,7 +3,7 @@ export function sendToWhatsApp(message: string) {
   const encodedMessage = encodeURIComponent(message)
 
   // Updated WhatsApp number
-  const phoneNumber = "94760484612" 
+  const phoneNumber = process.env.WHATSAPP_RECIPIENT_PHONE || "94760484612"
   // International format for UK number 07604848612
 
   // Create WhatsApp URL

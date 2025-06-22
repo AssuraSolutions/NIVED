@@ -304,8 +304,8 @@ Product Details:
 Design Notes:
 ${formData.designNotes}
 
-Design Files: ${uploadedFileUrls.length} file(s) uploaded
-${uploadedFileUrls.map((url, index) => `File ${index + 1}: ${url}`).join("\n")}
+// Design Files: ${uploadedFileUrls.length} file(s) uploaded
+// ${uploadedFileUrls.map((url, index) => `File ${index + 1}: ${url}`).join("\n")}
 
 
 We'll review your order and contact you within 24 hours with a quote and timeline.`;
