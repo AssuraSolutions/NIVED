@@ -20,17 +20,7 @@ export async function GET(request: Request) {
     const colors = searchParams.getAll("colors");
     const sortBy = searchParams.get("sortBy") || "newest";
 
-    console.log("API Filter params:", {
-      page,
-      limit,
-      clothingTypeIds,
-      search,
-      minPrice,
-      maxPrice,
-      sizes,
-      colors,
-      sortBy,
-    });
+  
 
     // Build where clause
     const where: any = {
