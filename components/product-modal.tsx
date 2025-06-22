@@ -257,7 +257,7 @@ Please contact me to arrange payment and delivery.
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <p className="text-[#c9a55c]">{product.category}</p>
+                    {/* Category removed: 'category' does not exist on Product */}
                     {/* Limited Edition badge removed: 'isLimited' does not exist on Product */}
                   </div>
                   <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900">
