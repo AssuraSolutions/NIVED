@@ -9,14 +9,6 @@ export async function GET(request: Request) {
     const limit = Number.parseInt(searchParams.get("limit") || "10");
     const offset = (page - 1) * limit;
 
-    console.log(
-      "GET /api/reviews - productId:",
-      productId,
-      "page:",
-      page,
-      "limit:",
-      limit
-    );
 
     if (!productId) {
       return NextResponse.json(
