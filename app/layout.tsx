@@ -30,7 +30,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "NiveD 01.12", url: process.env.NEXT_PUBLIC_SITE_URL }],
   creator: "NiveD 01.12 Team",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://nived-store.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://nived-store.com"
+  ),
   openGraph: {
     title: "NiveD 01.12 | Premium Fashion & Lifestyle",
     description:
@@ -53,7 +55,7 @@ export const metadata: Metadata = {
     title: "NiveD 01.12 | Premium Fashion & Lifestyle",
     description:
       "Explore our collection of premium, eco-conscious fashion and lifestyle products.",
-    images: ["https://nived-store.com/og-image.jpg"], // Replace with real image URL
+    images: [`${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`], // Replace with real image URL
     creator: "@nived0112", // Replace with your actual Twitter handle
   },
   icons: {
@@ -61,11 +63,11 @@ export const metadata: Metadata = {
     shortcut: "/favicon-32x32.png",
     apple: "/apple-touch-icon.png",
   },
-  themeColor: "#ffffff",
-  manifest: "/site.webmanifest",
-  viewport:
-    "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
-  category: "fashion",
+  // themeColor: "#ffffff",
+  // manifest: "/site.webmanifest",
+  // viewport:
+  //   "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
+  // category: "fashion",
 };
 
 interface RootLayoutProps {
