@@ -30,6 +30,9 @@ model Product {
   clothingTypeId   Int
   clothingType   ClothingTypes @relation(fields: [clothingTypeId], references: [id])
 
+  // INVERSE RELATION
+  reviews         Review[]
+
   @@map("products")
 }
 
@@ -69,4 +72,28 @@ enum OrderStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 stars
+  comment   String?  // Optional review text
+  title     String?  // Optional review title
+  
+  // Customer information
+  customerName  String
+  customerEmail String
+  isVerified    Boolean @default(false) // For verified purchases
+  
+  // Relations
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Indexes
+  @@index([productId])
+  @@index([rating])
+  @@index([createdAt])
 }
