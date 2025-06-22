@@ -62,7 +62,7 @@ export default function CustomPrintSection() {
               </Button>
             </div>
           </div>
-          <div className="relative h-[700px] [600px]  md:h-[600px] w-[500px] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] overflow-hidden border-4 border-white shadow-xl">
+          <div className="relative aspect-[4/5] md:aspect-[4/5] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] overflow-hidden border-4 border-white shadow-xl">
             <Image
               src="/main-image (6).jpg"
               alt="Custom T-shirt Printing"
