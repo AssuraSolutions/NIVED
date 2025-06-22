@@ -12,13 +12,9 @@ import { Plus, Trash2, Pencil, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Product } from "@/lib/types"
 
-type ProductWithType = Product & {
-  clothingType?: { label: string }
-}
-
 export default function ClothingPage() {
   const { toast } = useToast()
-  const [products, setProducts] = useState<ProductWithType[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [clothingTypes, setClothingTypes] = useState<{ id: number; label: string }[]>([])
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
@@ -31,7 +27,6 @@ export default function ClothingPage() {
   const fetchProducts = async (category = "all", search = "", page = 1) => {
     try {
       setLoading(true)
-
       const queryParams = new URLSearchParams()
       if (category !== "all") queryParams.append("category", category)
       if (search) queryParams.append("search", search)
@@ -42,7 +37,7 @@ export default function ClothingPage() {
       if (!res.ok) throw new Error("Failed to fetch products")
 
       const data = await res.json()
-      setProducts(data.products as ProductWithType[])
+      setProducts(data.products as Product[])
       setClothingTypes(data.clothingTypes || [])
       setHasNextPage(data.hasNextPage)
     } catch (err) {
@@ -65,7 +60,7 @@ export default function ClothingPage() {
     return () => clearTimeout(delayDebounce)
   }, [selectedCategory, searchTerm, page])
 
-  const handleEditProduct = (product: ProductWithType) => {
+  const handleEditProduct = (product: Product) => {
     console.log("Edit product", product)
   }
 
@@ -81,7 +76,7 @@ export default function ClothingPage() {
     }
   }
 
-  const getStatusBadge = (product: ProductWithType) =>
+  const getStatusBadge = (product: Product) =>
     product.isPublished ? (
       <Badge className="bg-green-100 text-green-800">Published</Badge>
     ) : (
@@ -97,40 +92,39 @@ export default function ClothingPage() {
         </Button>
       </div>
 
-     <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-    {/* Search */}
-    <div className="flex-1 flex justify-center order-1 md:order-none">
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        <Input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            setPage(1)
-          }}
-          className="pl-10 pr-4 py-3 w-full rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] focus:border-[#b08d4a] bg-white/80 backdrop-blur-sm"
-        />
-      </div>
-    </div>
+      <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex-1 flex justify-center order-1 md:order-none">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setPage(1)
+              }}
+              className="pl-10 pr-4 py-3 w-full rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] bg-white/80 backdrop-blur-sm"
+            />
+          </div>
+        </div>
 
-    <div className="w-full md:w-1/3 md:ml-auto order-2">
-      <Select value={selectedCategory} onValueChange={(val) => { setSelectedCategory(val); setPage(1) }}>
-        <SelectTrigger className="w-full rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] focus:border-[#b08d4a] bg-white/80 backdrop-blur-sm">
-          <SelectValue placeholder="Select Category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All</SelectItem>
-          {clothingTypes.map((type) => (
-            <SelectItem key={type.id} value={type.id.toString()}>
-              {type.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  </div>
+        <div className="w-full md:w-1/3 md:ml-auto order-2">
+          <Select value={selectedCategory} onValueChange={(val) => { setSelectedCategory(val); setPage(1) }}>
+            <SelectTrigger className="w-full rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] bg-white/80 backdrop-blur-sm">
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {clothingTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id.toString()}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {error && <div className="mb-6 p-4 bg-red-100 text-red-800 rounded">{error}</div>}
 
@@ -172,7 +166,7 @@ export default function ClothingPage() {
                       </TableCell>
                       <TableCell>{product.name}</TableCell>
                       <TableCell>{product.clothingType?.label || "Unknown"}</TableCell>
-                      <TableCell>${product.price?.toFixed(2)}</TableCell>
+                      <TableCell>${product.price.toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(product)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

@@ -85,6 +85,7 @@ export async function GET(request: Request) {
   }
 }
 
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
         name: body.name,
         description: body.description,
         longDescription: body.longDescription || null,
-        price: Number.parseFloat(body.price),
+        price: parseFloat(body.price),
         clothingTypeId: Number(body.clothingTypeId),
         images: Array.isArray(body.images) ? body.images : [],
         availableSizes: Array.isArray(body.availableSizes) ? body.availableSizes : [],
@@ -106,8 +107,8 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(product, { status: 201 })
-  } catch (error) {
-    console.error("Error creating product:", error)
+  } catch (error: any) {
+    console.error("Error creating product:", error.message || error)
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
   }
 }
