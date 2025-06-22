@@ -1,21 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import type React from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import ProductGrid from "@/components/product-grid";
 import ProductFilters from "@/components/product-filters";
+import Pagination from "@/components/pagination";
 import type { Product } from "@/lib/types";
+
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  limit: number;
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    limit: 12,
+  });
+
   const [currentFilters, setCurrentFilters] = useState({
     priceRange: [0, 5000] as [number, number],
     sizes: [] as string[],
@@ -25,123 +43,102 @@ export default function ProductsPage() {
     search: "",
   });
 
-  useEffect(() => {
-    loadProducts();
-  }, [activeCategory]);
+  const loadProducts = useCallback(
+    async (page = 1) => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams();
 
-  useEffect(() => {
-    applyFilters();
-  }, [products, currentFilters, searchTerm]);
+        // Pagination
+        params.append("page", page.toString());
+        params.append("limit", pagination.limit.toString());
 
-  const loadProducts = async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (activeCategory !== "all") {
-        params.append("category", activeCategory);
+        // Filters
+        if (searchTerm.trim()) {
+          params.append("search", searchTerm.trim());
+        }
+
+        if (currentFilters.priceRange[0] > 0) {
+          params.append("minPrice", currentFilters.priceRange[0].toString());
+        }
+
+        if (currentFilters.priceRange[1] < 5000) {
+          params.append("maxPrice", currentFilters.priceRange[1].toString());
+        }
+
+        currentFilters.clothingTypes.forEach((id) => {
+          params.append("clothingTypeIds", id);
+        });
+
+        currentFilters.sizes.forEach((size) => {
+          params.append("sizes", size);
+        });
+
+        currentFilters.colors.forEach((color) => {
+          params.append("colors", color);
+        });
+
+        if (currentFilters.sortBy) {
+          params.append("sortBy", currentFilters.sortBy);
+        }
+
+        console.log("Fetching products with params:", params.toString());
+
+        const response = await fetch(`/api/products?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setProducts(data.products || []);
+        setPagination(
+          data.pagination || {
+            currentPage: 1,
+            totalPages: 1,
+            totalCount: 0,
+            hasNextPage: false,
+            hasPreviousPage: false,
+            limit: 12,
+          }
+        );
+      } catch (error) {
+        console.error("Error loading products:", error);
+        setProducts([]);
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          limit: 12,
+        });
+      } finally {
+        setIsLoading(false);
       }
-      currentFilters.clothingTypes.forEach((id) => {
-        params.append("clothingTypeIds", id); 
-      });
+    },
+    [searchTerm, currentFilters, pagination.limit]
+  );
 
-      console.log("Product fetch URL:", `/api/products?${params.toString()}`);
-
-      const response = await fetch(`/api/products?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setProducts(data);
-    } catch (error) {
-      console.error("Error loading products:", error);
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-      
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...products];
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    filtered = filtered.filter(
-      (product) =>
-        product.price >= currentFilters.priceRange[0] &&
-        product.price <= currentFilters.priceRange[1]
-    );
-
-    if (
-      Array.isArray(currentFilters.sizes) &&
-      currentFilters.sizes.length > 0
-    ) {
-      filtered = filtered.filter((product) =>
-        product.availableSizes?.some((size) =>
-          currentFilters.sizes.includes(size)
-        )
-      );
-    }
-
-    if (
-      Array.isArray(currentFilters.colors) &&
-      currentFilters.colors.length > 0
-    ) {
-      filtered = filtered.filter((product) =>
-        product.colors?.some((color) => currentFilters.colors.includes(color))
-      );
-    }
-
-    if (
-      Array.isArray(currentFilters.clothingTypes) &&
-      currentFilters.clothingTypes.length > 0
-    ) {
-      filtered = filtered.filter((product) =>
-        currentFilters.clothingTypes.includes(String(product.clothingTypeId))
-      );
-    }
-    
-
-    switch (currentFilters.sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "newest":
-      default:
-        break;
-    }
-
-    setFilteredProducts(filtered);
-  };
+  // Load products when filters change
+  useEffect(() => {
+    loadProducts(1); // Reset to page 1 when filters change
+  }, [currentFilters, searchTerm]);
 
   const handleFiltersChange = (filters: Partial<typeof currentFilters>) => {
     console.log("FILTER CHANGED:", filters);
     setCurrentFilters((prev) => ({
       ...prev,
       ...filters,
-      sizes: filters.sizes ?? [],
-      colors: filters.colors ?? [],
-      priceRange: filters.priceRange ?? [0, 5000],
-      sortBy: filters.sortBy ?? "newest",
-      search: filters.search ?? "",
-      clothingTypes: filters.clothingTypes ?? [],
+      sizes: filters.sizes ?? prev.sizes,
+      colors: filters.colors ?? prev.colors,
+      priceRange: filters.priceRange ?? prev.priceRange,
+      sortBy: filters.sortBy ?? prev.sortBy,
+      search: filters.search ?? prev.search,
+      clothingTypes: filters.clothingTypes ?? prev.clothingTypes,
     }));
   };
-  
+
   const handleClearFilters = () => {
     setCurrentFilters({
       priceRange: [0, 5000],
@@ -152,6 +149,17 @@ export default function ProductsPage() {
       clothingTypes: [],
     });
     setSearchTerm("");
+  };
+
+  const handlePageChange = (page: number) => {
+    loadProducts(page);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadProducts(1); // Reset to page 1 for new search
   };
 
   return (
@@ -170,7 +178,10 @@ export default function ProductsPage() {
           </div>
 
           <div className="mb-8">
-            <div className="relative max-w-md mx-auto">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="relative max-w-md mx-auto"
+            >
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 type="text"
@@ -179,11 +190,10 @@ export default function ProductsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-3 w-full rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c] focus:border-[#b08d4a] bg-white/80 backdrop-blur-sm"
               />
-            </div>
+            </form>
           </div>
 
           {/* Filters and Product Grid */}
-
           <div className="flex gap-8">
             <div
               className={`${
@@ -209,11 +219,11 @@ export default function ProductsPage() {
                   <p className="text-gray-700 dark:text-gray-300 font-medium">
                     {isLoading
                       ? "Loading..."
-                      : `${filteredProducts.length} products found`}
+                      : `${pagination.totalCount} products found`}
                   </p>
-                  {activeCategory !== "all" && (
-                    <span className="px-3 py-1 bg-[#c9a55c] text-white rounded-full text-sm font-medium capitalize">
-                      {activeCategory}
+                  {pagination.totalCount > 0 && (
+                    <span className="text-sm text-gray-500">
+                      Page {pagination.currentPage} of {pagination.totalPages}
                     </span>
                   )}
                 </div>
@@ -248,10 +258,20 @@ export default function ProductsPage() {
                   ))}
                 </div>
               ) : (
-                <ProductGrid products={filteredProducts} />
+                <>
+                  <ProductGrid products={products} />
+
+                  <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                    hasNextPage={pagination.hasNextPage}
+                    hasPreviousPage={pagination.hasPreviousPage}
+                  />
+                </>
               )}
 
-              {!isLoading && filteredProducts.length === 0 && (
+              {!isLoading && products.length === 0 && (
                 <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c]">
                   <div className="max-w-md mx-auto">
                     <Filter className="mx-auto h-16 w-16 text-gray-400 mb-4" />

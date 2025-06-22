@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, SlidersHorizontal } from "lucide-react";
 
@@ -29,7 +28,6 @@ interface ProductFiltersProps {
   compact?: boolean;
 }
 
-
 interface ClothingType {
   id: string;
   name: string;
@@ -41,24 +39,15 @@ export default function ProductFilters({
   onClearFilters,
   compact = false,
 }: ProductFiltersProps) {
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedClothingTypes, setSelectedClothingTypes] = useState<string[]>(
     []
   );
   const [sortBy, setSortBy] = useState("newest");
-  const [isExpanded, setIsExpanded] = useState(true);
   const [clothingTypes, setClothingTypes] = useState<ClothingType[]>([]);
 
-  const sizes = [
-    "XS",
-    "S",
-    "M",
-    "L",
-    "XL",
-    
-  ];
-
+  const sizes = ["XS", "S", "M", "L", "XL"];
 
   useEffect(() => {
     setPriceRange(filters.priceRange);
@@ -67,7 +56,6 @@ export default function ProductFilters({
     setSortBy(filters.sortBy);
   }, [filters]);
 
-  
   useEffect(() => {
     async function fetchClothingTypes() {
       try {
@@ -88,11 +76,6 @@ export default function ProductFilters({
       : selectedSizes.filter((s) => s !== size);
     setSelectedSizes(newSizes);
     updateFilters({ sizes: newSizes });
-  };
-
-  const toggleSize = (size: string) => {
-    const isSelected = selectedSizes.includes(size);
-    handleSizeChange(size, !isSelected);
   };
 
   const handleClothingTypeChange = (typeId: string, checked: boolean) => {
@@ -126,7 +109,7 @@ export default function ProductFilters({
   };
 
   const clearAllFilters = () => {
-    setPriceRange([0, 100]);
+    setPriceRange([0, 5000]);
     setSelectedSizes([]);
     setSelectedClothingTypes([]);
     setSortBy("newest");
@@ -137,7 +120,7 @@ export default function ProductFilters({
     selectedSizes.length > 0 ||
     selectedClothingTypes.length > 0 ||
     priceRange[0] > 0 ||
-    priceRange[1] < 100;
+    priceRange[1] < 5000;
 
   if (compact) {
     return (
@@ -191,147 +174,104 @@ export default function ProductFilters({
         </div>
       </div>
 
-      {isExpanded && (
-        <>
-          {/* Price Range */}
-          <Card className="border-[#c9a55c]/20">
-            <CardContent className="p-4">
-              <Label className="font-medium text-gray-700 mb-4 block">
-                Price Range
-              </Label>
-              <div className="px-2 space-y-3">
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="number"
-                    value={priceRange[0]}
-                    min={0}
-                    max={priceRange[1]}
-                    onChange={(e) => {
-                      const val = Math.min(
-                        priceRange[1],
-                        Math.max(0, Number(e.target.value))
-                      );
-                      handlePriceChange([val, priceRange[1]]);
-                    }}
-                    className="w-full border rounded px-2 py-1 text-sm text-gray-800"
-                  />
-                  <span className="text-sm text-gray-500">to</span>
-                  <input
-                    type="number"
-                    value={priceRange[1]}
-                    min={priceRange[0]}
-                    max={100}
-                    onChange={(e) => {
-                      const val = Math.max(
-                        priceRange[0],
-                        Math.min(100, Number(e.target.value))
-                      );
-                      handlePriceChange([priceRange[0], val]);
-                    }}
-                    className="w-full border rounded px-2 py-1 text-sm text-gray-800"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sizes single-select dropdown */}
-          <Card className="border-[#c9a55c]/20">
-            <CardContent className="p-4">
-              <Label className="font-medium text-gray-700 mb-4 block">
-                Sizes
-              </Label>
-              <Select
-                value={selectedSizes[0] || ""}
-                onValueChange={(value) => {
-                  setSelectedSizes(value ? [value] : []);
-                  updateFilters({ sizes: value ? [value] : [] });
+      {/* Price Range */}
+      <Card className="border-[#c9a55c]/20">
+        <CardContent className="p-4">
+          <Label className="font-medium text-gray-700 mb-4 block">
+            Price Range
+          </Label>
+          <div className="px-2 space-y-3">
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                value={priceRange[0]}
+                min={0}
+                max={priceRange[1]}
+                onChange={(e) => {
+                  const val = Math.min(
+                    priceRange[1],
+                    Math.max(0, Number(e.target.value))
+                  );
+                  handlePriceChange([val, priceRange[1]]);
                 }}
-              >
-                <SelectTrigger className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-[#c9a55c]">
-                  <SelectValue placeholder="Select size" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sizes.map((size) => (
-                    <SelectItem key={size} value={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-full border rounded px-2 py-1 text-sm text-gray-800"
+              />
+              <span className="text-sm text-gray-500">to</span>
+              <input
+                type="number"
+                value={priceRange[1]}
+                min={priceRange[0]}
+                max={5000}
+                onChange={(e) => {
+                  const val = Math.max(
+                    priceRange[0],
+                    Math.min(5000, Number(e.target.value))
+                  );
+                  handlePriceChange([priceRange[0], val]);
+                }}
+                className="w-full border rounded px-2 py-1 text-sm text-gray-800"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* {selectedSizes.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {selectedSizes.map((size) => (
-                    <Badge
-                      key={size}
-                      variant="secondary"
-                      className="text-xs bg-[#c9a55c]/10 text-[#c9a55c]"
-                    >
-                      {size}
-                      <X
-                        className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                        onClick={() => toggleSize(size)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )} */}
-            </CardContent>
-          </Card>
-
-          {/* Clothing Types multi-select checkboxes */}
-          <Card className="border-[#c9a55c]/20">
-            <CardContent className="p-5 ">
-              <Label className="font-medium text-gray-700 mb-4 block">
-                Clothing Types
-              </Label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-hidden">
-                {clothingTypes.length === 0 && <p>Loading...</p>}
-                {clothingTypes.map((type) => (
-                  <div key={type.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`clothing-type-${type.id}`}
-                      checked={selectedClothingTypes.includes(type.id)}
-                      onCheckedChange={(checked) =>
-                        handleClothingTypeChange(type.id, checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor={`clothing-type-${type.id}`}
-                      className="cursor-pointer"
-                    >
-                      {type.name}
-                    </Label>
-                  </div>
-                ))}
+      {/* Sizes */}
+      <Card className="border-[#c9a55c]/20">
+        <CardContent className="p-4">
+          <Label className="font-medium text-gray-700 mb-4 block">Sizes</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {sizes.map((size) => (
+              <div key={size} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`size-${size}`}
+                  checked={selectedSizes.includes(size)}
+                  onCheckedChange={(checked) =>
+                    handleSizeChange(size, checked as boolean)
+                  }
+                />
+                <Label
+                  htmlFor={`size-${size}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {size}
+                </Label>
               </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* {selectedClothingTypes.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {selectedClothingTypes.map((id) => {
-                    const name =
-                      clothingTypes.find((c) => c.id === id)?.name || id;
-                    return (
-                      <Badge
-                        key={id}
-                        variant="secondary"
-                        className="text-xs bg-[#c9a55c]/10 text-[#c9a55c]"
-                      >
-                        {name}
-                        <X
-                          className="ml-1 h-3 w-3 cursor-pointer hover:text-red-500"
-                          onClick={() => handleClothingTypeChange(id, false)}
-                        />
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )} */}
-            </CardContent>
-          </Card>
-        </>
-      )}
+      {/* Clothing Types */}
+      <Card className="border-[#c9a55c]/20">
+        <CardContent className="p-4">
+          <Label className="font-medium text-gray-700 mb-4 block">
+            Clothing Types
+          </Label>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {clothingTypes.length === 0 && (
+              <p className="text-sm text-gray-500">Loading...</p>
+            )}
+            {clothingTypes.map((type) => (
+              <div key={type.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`clothing-type-${type.id}`}
+                  checked={selectedClothingTypes.includes(type.id)}
+                  onCheckedChange={(checked) =>
+                    handleClothingTypeChange(type.id, checked as boolean)
+                  }
+                />
+                <Label
+                  htmlFor={`clothing-type-${type.id}`}
+                  className="cursor-pointer text-sm"
+                >
+                  {type.name}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
