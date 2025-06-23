@@ -7,10 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Plus, Trash2, Pencil, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Product } from "@/lib/types"
+import { useRouter } from "next/navigation"
+import ProductForm from "@/components/ProductForm"
+
 
 export default function ClothingPage() {
   const { toast } = useToast()
@@ -19,37 +23,56 @@ export default function ClothingPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
-  const pageSize = 20
+  const pageSize = 10
   const [hasNextPage, setHasNextPage] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [totalCount, setTotalCount] = useState(0)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editProductData, setEditProductData] = useState<Product | null>(null)
+  const router = useRouter()
 
-  const fetchProducts = async (category = "all", search = "", page = 1) => {
-    try {
-      setLoading(true)
-      const queryParams = new URLSearchParams()
-      if (category !== "all") queryParams.append("category", category)
-      if (search) queryParams.append("search", search)
-      queryParams.append("page", page.toString())
-      queryParams.append("limit", pageSize.toString())
 
-      const res = await fetch(`/api/admin/products?${queryParams.toString()}`)
-      if (!res.ok) throw new Error("Failed to fetch products")
+const fetchProducts = async (category = "all", search = "", page = 1) => {
+  try {
+    setLoading(true)
+    const queryParams = new URLSearchParams()
+    if (category !== "all") queryParams.append("category", category)
+    if (search) queryParams.append("search", search)
+    queryParams.append("page", page.toString())
+    queryParams.append("limit", pageSize.toString())
 
-      const data = await res.json()
-      setProducts(data.products as Product[])
-      setClothingTypes(data.clothingTypes || [])
-      setHasNextPage(data.hasNextPage)
-    } catch (err) {
-      console.error(err)
-      setError("Failed to load products")
-    } finally {
-      setLoading(false)
-    }
+    const res = await fetch(`/api/admin/products?${queryParams.toString()}`)
+    if (!res.ok) throw new Error("Failed to fetch products")
+
+    const data = await res.json()
+    setProducts(data.products as Product[])
+    setHasNextPage(data.hasNextPage)
+    setTotalCount(data.totalCount || 0)
+  } catch (err) {
+    console.error(err)
+    setError("Failed to load products")
+  } finally {
+    setLoading(false)
   }
+}
+
+const fetchClothingTypes = async () => {
+  try {
+    const res = await fetch("/api/clothing-type")
+    if (!res.ok) throw new Error("Failed to fetch clothing types")
+    const data = await res.json()
+    setClothingTypes(data)
+  } catch (err) {
+    console.error("Failed to load clothing types:", err)
+    setClothingTypes([]) 
+  }
+}
 
   useEffect(() => {
     fetchProducts()
+    fetchClothingTypes()
   }, [])
 
   useEffect(() => {
@@ -60,20 +83,26 @@ export default function ClothingPage() {
     return () => clearTimeout(delayDebounce)
   }, [selectedCategory, searchTerm, page])
 
-  const handleEditProduct = (product: Product) => {
-    console.log("Edit product", product)
+    const handleEditProduct = (product: Product) => {
+    setEditProductData(product)
+    setIsEditing(true)
+    setIsDialogOpen(true)
   }
 
   const handleDeleteProduct = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"?`)) return
     try {
+      setLoading (true)
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete product")
-      toast({ title: "Deleted", description: `${name} was removed.` })
       fetchProducts(selectedCategory, searchTerm, page)
     } catch (err) {
       toast({ title: "Error", description: "Delete failed", variant: "destructive" })
     }
+    finally{setLoading (false)
+      toast({ title: "Deleted", description: `${name} was removed.` })
+    }
+
   }
 
   const getStatusBadge = (product: Product) =>
@@ -84,13 +113,70 @@ export default function ClothingPage() {
     )
 
   return (
-    <div className="container mx-auto px-4 py-8">
+   <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold font-playfair">Clothing Management</h1>
-        <Button className="bg-[#c9a55c] hover:bg-[#b08d4a] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c]">
+        <Button
+          onClick={() => {
+            setIsDialogOpen(true)
+            setIsEditing(false)
+            setEditProductData(null)
+          }}
+          className="bg-[#c9a55c] hover:bg-[#b08d4a] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c]"
+        >
           <Plus className="mr-2 h-4 w-4" /> Add New Item
         </Button>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-4 border-white">
+          <DialogHeader>
+            <DialogTitle>{isEditing ? "Edit Clothing Item" : "Add New Clothing Item"}</DialogTitle>
+          </DialogHeader>
+
+          <ProductForm
+            initialData={editProductData || {}}
+            onSubmit={async (data) => {
+              const res = await fetch(
+                isEditing ? `/api/admin/products/${editProductData?.id}` : "/api/admin/products",
+                {
+                  method: isEditing ? "PUT" : "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data),
+                }
+              )
+
+              if (res.ok) {
+                setIsDialogOpen(false)
+                setEditProductData(null)
+                setIsEditing(false)
+                fetchProducts(selectedCategory, searchTerm, page)
+                toast({
+                  title: isEditing ? "Product updated" : "Product added",
+                  description: "Changes saved successfully.",
+                })
+              } else {
+                toast({
+                  title: "Error",
+                  description: "Something went wrong.",
+                  variant: "destructive",
+                })
+              }
+            }}
+          />
+
+          <DialogFooter>
+            {/* <Button
+              type="submit"
+              form="product-form"
+              className="w-full bg-[#c9a55c] hover:bg-[#b08d4a] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c]"
+            >
+              {isEditing ? "Update Product" : "Add Product"}
+            </Button> */}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    
 
       <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex-1 flex justify-center order-1 md:order-none">
@@ -131,7 +217,9 @@ export default function ClothingPage() {
       <Card className="rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2">
         <CardHeader className="pb-0">
           <CardTitle>
-            {selectedCategory === "all" ? "All Items" : `Category #${selectedCategory}`} ({products.length} items)
+           {selectedCategory === "all"
+              ? "All Items"
+              : `${clothingTypes.find((type) => type.id.toString() === selectedCategory)?.label || "Unknown"}`} ({products.length} items)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -152,54 +240,67 @@ export default function ClothingPage() {
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <Image
-                          src={product.images?.[0] || "/placeholder.svg"}
-                          alt={product.name}
-                          width={50}
-                          height={50}
-                          className="rounded-md object-cover"
-                        />
-                      </TableCell>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.clothingType?.label || "Unknown"}</TableCell>
-                      <TableCell>${product.price.toFixed(2)}</TableCell>
-                      <TableCell>{getStatusBadge(product)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product.id, product.name)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+               <TableBody>
+  {products.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <Image
+                      src={product.images?.[0] || "/placeholder.svg"}
+                      alt={product.name}
+                      width={50}
+                      height={50}
+                      className="rounded-md object-cover"
+                    />
+                  </TableCell>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{product.clothingType?.label || "Unknown"}</TableCell>
+                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>{getStatusBadge(product)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product.id, product.name)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
               </Table>
 
-              <div className="flex justify-center mt-6 gap-2">
-                <Button
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="border border-[#c9a55c]"
-                >
-                  Previous
-                </Button>
-                <span className="px-4 py-2">Page {page}</span>
-                <Button
-                  disabled={!hasNextPage}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="border border-[#c9a55c]"
-                >
-                  Next
-                </Button>
-              </div>
+              <div className="flex justify-center mt-6 gap-2 items-center">
+                  <Button
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="border border-[#c9a55c]"
+                  >
+                    {"<<"}
+                  </Button>
+
+                  <span className="px-4 py-2">
+                    Page {page} of {Math.ceil(totalCount / pageSize) || 1}
+                  </span>
+
+                  <Button
+                    disabled={!hasNextPage}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="border border-[#c9a55c]"
+                  >
+                    {">>"}
+                  </Button>
+                </div>
+
             </>
           )}
         </CardContent>

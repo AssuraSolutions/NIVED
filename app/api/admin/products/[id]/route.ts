@@ -19,8 +19,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }:{ params: { id: string } }) {
   try {
+    const productId = params.id;
+   
     const body = await request.json()
 
     const updateData: any = {}
@@ -40,7 +42,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     updateData.updatedAt = new Date()
 
     const product = await prisma.product.update({
-      where: { id: params.id },
+      where: { id: productId },
       data: updateData,
     })
 

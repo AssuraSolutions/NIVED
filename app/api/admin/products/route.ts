@@ -50,17 +50,20 @@ export async function GET(request: Request) {
             mode: "insensitive",
           },
         },
+
         ...(clothingTypeIdsMatchingSearch.length > 0
           ? [{ clothingTypeId: { in: clothingTypeIdsMatchingSearch } }]
           : []),
       ]
     }
 
-    if (isPublished !== null && isPublished !== undefined) {
-      where.isPublished = isPublished === "true"
-    }
+      // if (isPublished === "published") {
+      //   where.isPublished = true
+      // } else if (isPublished === "unpublished") {
+      //   where.isPublished = false
+      // }
 
-  const [products, clothingTypes, totalCount] = await Promise.all([
+  const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -70,15 +73,12 @@ export async function GET(request: Request) {
           clothingType: true,
         },
       }),
-      prisma.clothingTypes.findMany({
-        select: { id: true, label: true },
-      }),
-      prisma.product.count({ where }), // total count for hasNextPage
+      prisma.product.count({ where }), 
     ])
 
     const hasNextPage = skip + limit < totalCount
 
-    return NextResponse.json({ products, clothingTypes, hasNextPage, totalCount })
+    return NextResponse.json({ products, hasNextPage, totalCount })
   } catch (error) {
     console.error("Error in admin products API:", error)
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
