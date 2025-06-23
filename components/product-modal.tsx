@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Rating } from "@/components/ui/rating";
-import { Badge } from "@/components/ui/badge";
 import {
   ShoppingBag,
   Heart,
@@ -29,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { sendToWhatsApp } from "@/lib/whatsapp";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { useCart } from "@/hooks/use-cart";
+import ReviewForm from "@/components/review-form";
+import ReviewsList from "@/components/reviews-list";
 import type { Product } from "@/lib/types";
 
 interface ProductModalProps {
@@ -50,8 +51,7 @@ export default function ProductModal({
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
-
-  if (!product) return null;
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (isOpen && product) {
@@ -62,6 +62,8 @@ export default function ProductModal({
       setIsImageZoomed(false);
     }
   }, [isOpen, product]);
+
+  if (!product) return null;
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -88,7 +90,7 @@ export default function ProductModal({
       description: `${product.name} (${selectedSize}, ${selectedColor}) has been added to your cart.`,
     });
 
-    onClose(); // optional, closes the modal
+    onClose();
   };
 
   const handleBuyNow = () => {
@@ -155,6 +157,10 @@ Please contact me to arrange payment and delivery.
     }
   };
 
+  const handleReviewSubmitted = () => {
+    setReviewsRefreshTrigger((prev) => prev + 1);
+  };
+
   const currentImage = product.images?.[activeImageIndex] || "/placeholder.svg";
 
   return (
@@ -166,21 +172,22 @@ Please contact me to arrange payment and delivery.
           Product details for {product.name} - {product.description}
         </DialogDescription>
         <div className="relative bg-white overflow-y-auto max-h-[95vh]">
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="absolute right-4 top-4 z-20 rounded-full bg-white/80 hover:bg-white"
             onClick={onClose}
-          >
+          > 
             <X className="h-5 w-5" />
             <span className="sr-only">Close</span>
           </Button>
 
+*/}
           <div className="p-6 md:p-8">
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Product Images */}
               <div className="space-y-4">
-                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 rounded-[255px_15px_225px_15px/15px_225px_15px_255px]">
+                <div className="relative aspect-square overflow-hidden border-2 border-gray-200 rounded-[255px_15px_225px_15px/15px_225px_15px_255px]">
                   <Image
                     src={currentImage || "/placeholder.svg"}
                     alt={product.name}
@@ -256,16 +263,14 @@ Please contact me to arrange payment and delivery.
               {/* Product Details */}
               <div className="space-y-6">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <p className="text-[#c9a55c]">{product.category}</p>
-                    {/* Limited Edition badge removed: 'isLimited' does not exist on Product */}
-                  </div>
                   <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900">
                     {product.name}
                   </h1>
                   <div className="flex items-center gap-2 mt-2">
                     <Rating value={4} />
-                    <span className="text-gray-500 text-sm">(24 reviews)</span>
+                    <span className="text-gray-500 text-sm">
+                      (Reviews below)
+                    </span>
                   </div>
                 </div>
 
@@ -485,20 +490,15 @@ Please contact me to arrange payment and delivery.
                   </div>
                 </TabsContent>
                 <TabsContent value="reviews" className="mt-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <div className="text-5xl font-bold text-gray-900">
-                          4.0
-                        </div>
-                        <div className="mt-1">
-                          <Rating value={4} />
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Based on 24 reviews
-                        </p>
-                      </div>
-                    </div>
+                  <div className="space-y-8">
+                    <ReviewsList
+                      productId={product.id}
+                      refreshTrigger={reviewsRefreshTrigger}
+                    />
+                    <ReviewForm
+                      productId={product.id}
+                      onReviewSubmitted={handleReviewSubmitted}
+                    />
                   </div>
                 </TabsContent>
               </Tabs>

@@ -112,7 +112,7 @@ Please contact me to arrange payment and delivery.
                                 variant="outline"
                                 size="icon"
                                 className="h-7 w-7 rounded-full"
-                                onClick={() => updateQuantity(item.id, item.size, item.color, item.quantity - 1)}
+                                onClick={() => updateQuantity(item.id, item.size ?? "", item.color ?? "", item.quantity - 1)}
                                 disabled={item.quantity <= 1}
                               >
                                 <Minus className="h-3 w-3" />
@@ -123,7 +123,7 @@ Please contact me to arrange payment and delivery.
                                 variant="outline"
                                 size="icon"
                                 className="h-7 w-7 rounded-full"
-                                onClick={() => updateQuantity(item.id, item.size, item.color, item.quantity + 1)}
+                                onClick={() => updateQuantity(item.id, item.size ?? "", item.color ?? "", item.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
                                 <span className="sr-only">Increase</span>
@@ -133,7 +133,7 @@ Please contact me to arrange payment and delivery.
                               variant="ghost"
                               size="sm"
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 -mr-2"
-                              onClick={() => removeFromCart(item.id, item.size, item.color)}
+                              onClick={() => removeFromCart(item.id, item.size ?? "", item.color ?? "")}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Remove

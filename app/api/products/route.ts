@@ -4,13 +4,25 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    console.log("Received search params:", searchParams.toString()); // 🔍 Debug log
-    const clothingTypeIds = searchParams.getAll("clothingTypeIds");
 
-    const limit = searchParams.get("limit");
+    // Pagination parameters
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "12");
+    const offset = (page - 1) * limit;
+
+    // Filter parameters
+    const clothingTypeIds = searchParams.getAll("clothingTypeIds");
     const search = searchParams.get("search");
     const featured = searchParams.get("featured");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    const sizes = searchParams.getAll("sizes");
+    const colors = searchParams.getAll("colors");
+    const sortBy = searchParams.get("sortBy") || "newest";
 
+  
+
+    // Build where clause
     const where: any = {
       isPublished: true,
     };
@@ -19,48 +31,106 @@ export async function GET(request: Request) {
       where.isFeatured = true;
     }
 
-    // ✅ Convert to numbers properly
+    // Clothing type filter
     if (clothingTypeIds.length > 0) {
       const numericIds = clothingTypeIds
         .map((id) => Number(id.trim()))
-        .filter((id) => !isNaN(id)); // keep valid IDs
+        .filter((id) => !isNaN(id));
 
       if (numericIds.length > 0) {
         where.clothingTypeId = { in: numericIds };
       }
     }
 
-    if (search) {
+    // Search filter
+    if (search && search.trim()) {
       where.OR = [
         {
           name: {
-            contains: search,
+            contains: search.trim(),
             mode: "insensitive",
           },
         },
         {
           description: {
-            contains: search,
+            contains: search.trim(),
             mode: "insensitive",
           },
         },
       ];
     }
 
-    console.log("Final WHERE clause:", where); // 🔍 Debug log
+    // Price range filter
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) {
+        where.price.gte = parseFloat(minPrice);
+      }
+      if (maxPrice) {
+        where.price.lte = parseFloat(maxPrice);
+      }
+    }
 
+    // Size filter
+    if (sizes.length > 0) {
+      where.availableSizes = {
+        hasSome: sizes,
+      };
+    }
+
+    // Color filter
+    if (colors.length > 0) {
+      where.colors = {
+        hasSome: colors,
+      };
+    }
+
+    // Build orderBy clause
+    let orderBy: any = { createdAt: "desc" }; // default
+
+    switch (sortBy) {
+      case "price-low":
+        orderBy = { price: "asc" };
+        break;
+      case "price-high":
+        orderBy = { price: "desc" };
+        break;
+      case "name":
+        orderBy = { name: "asc" };
+        break;
+      case "newest":
+      default:
+        orderBy = { createdAt: "desc" };
+        break;
+    }
+
+    // Get total count for pagination
+    const totalCount = await prisma.product.count({ where });
+
+    // Get products with pagination
     const products = await prisma.product.findMany({
       where,
-      take: limit ? Number(limit) : undefined,
-      orderBy: {
-        createdAt: "desc",
-      },
+      skip: offset,
+      take: limit,
+      orderBy,
       include: {
         clothingType: true,
       },
     });
 
-    return NextResponse.json(products);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return NextResponse.json({
+      products,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        limit,
+      },
+    });
   } catch (error) {
     console.error("Error in products API:", error);
     return NextResponse.json(

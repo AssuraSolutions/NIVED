@@ -92,13 +92,15 @@ export default function ProductGrid({
 
                   {/* Badges */}
                   {showBadges && (
-                    <div className="absolute top-2 left-2 flex flex-col gap-1">
-                      {product.newArrival && (
-                        <Badge className="bg-black text-white">New</Badge>
+                    <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                      {product.isFeatured && (
+                        <Badge className="bg-[#c9a55c] text-white ">
+                          Featured
+                        </Badge>
                       )}
-                      {product.bestSeller && (
+                      {product.isLimited && (
                         <Badge className="bg-[#c9a55c] text-white">
-                          Best Seller
+                          Limited Edition
                         </Badge>
                       )}
                     </div>
@@ -137,7 +139,7 @@ export default function ProductGrid({
                     {product.name}
                   </h3>
                   <p className="text-gray-700 font-bold mb-3">
-                    ${product.price.toFixed(2)}
+                    LKR {product.price.toFixed(2)}
                   </p>
                   <Button
                     className="w-full bg-black hover:bg-gray-800 text-white rounded-[255px_15px_225px_15px/15px_225px_15px_255px]"
