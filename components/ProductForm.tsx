@@ -21,9 +21,10 @@ import type { Product } from "@/lib/types"
 type ProductFormProps = {
   initialData?: Partial<Product>
   onSubmit: (data: Omit<Product, "id" | "createdAt" | "updatedAt" | "clothingType">) => void
+  clothingTypes: { id: number; label: string }[]
 }
 
-export default function ProductForm({ initialData = {}, onSubmit }: ProductFormProps) {
+export default function ProductForm({ initialData = {}, onSubmit, clothingTypes, }: ProductFormProps) {
   const [product, setProduct] = useState({
     name: "",
     description: "",
@@ -40,21 +41,10 @@ export default function ProductForm({ initialData = {}, onSubmit }: ProductFormP
     ...initialData,
   })
 
-  const [clothingTypes, setClothingTypes] = useState<{ id: number; label: string }[]>([])
   const [newImageUrl, setNewImageUrl] = useState("")
   const [newColor, setNewColor] = useState("")
   const [newSize, setNewSize] = useState("")
   const [newTag, setNewTag] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(true)
-
-  useEffect(() => {
-    fetch("/api/clothing-type")
-      .then((res) => res.json())
-      .then((data) => setClothingTypes(data || []))
-      .catch((err) => {
-        console.error("Failed to load clothing types:", err)
-      });
-  }, [])
 
   const handleAdd = (field: string, value: string) => {
     if (!value.trim()) return
@@ -116,10 +106,10 @@ export default function ProductForm({ initialData = {}, onSubmit }: ProductFormP
                  </div>
 
                  <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="description">Long Description</Label>
+                <Label htmlFor="longdescription">Long Description</Label>
                 <Textarea
-                  id="description"
-                  name="description"
+                  id="longdescription"
+                  name="longdescription"
                   value={product.longDescription}
           	      onChange={(e) => setProduct({ ...product, longDescription: e.target.value })}
           	      rows={4}

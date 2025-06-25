@@ -21,6 +21,7 @@ export default function ClothingPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [clothingTypes, setClothingTypes] = useState<{ id: number; label: string }[]>([])
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [showOnlyDrafts, setShowOnlyDrafts] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
   const pageSize = 10
@@ -34,12 +35,14 @@ export default function ClothingPage() {
   const router = useRouter()
 
 
-const fetchProducts = async (category = "all", search = "", page = 1) => {
+const fetchProducts = async (category = "all", search = "", page = 1,  draftOnly = false ) => {
   try {
     setLoading(true)
     const queryParams = new URLSearchParams()
     if (category !== "all") queryParams.append("category", category)
     if (search) queryParams.append("search", search)
+    if (draftOnly) {queryParams.append("isPublished", "false")}
+
     queryParams.append("page", page.toString())
     queryParams.append("limit", pageSize.toString())
 
@@ -77,11 +80,11 @@ const fetchClothingTypes = async () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchProducts(selectedCategory, searchTerm, page)
+      fetchProducts(selectedCategory, searchTerm, page, showOnlyDrafts)
     }, 400)
 
     return () => clearTimeout(delayDebounce)
-  }, [selectedCategory, searchTerm, page])
+  }, [selectedCategory, searchTerm, page, showOnlyDrafts])
 
     const handleEditProduct = (product: Product) => {
     setEditProductData(product)
@@ -103,6 +106,47 @@ const fetchClothingTypes = async () => {
       toast({ title: "Deleted", description: `${name} was removed.` })
     }
 
+  }
+
+  const handleFormSubmit = async (
+    data: Omit<Product, "id" | "createdAt" | "updatedAt" | "clothingType">
+  ) => {
+    try {
+      const res = await fetch(
+        isEditing
+          ? `/api/admin/products/${editProductData?.id}`
+          : "/api/admin/products",
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      )
+
+      if (res.ok) {
+        setIsDialogOpen(false)
+        setEditProductData(null)
+        setIsEditing(false)
+        fetchProducts(selectedCategory, searchTerm, page)
+        toast({
+          title: isEditing ? "Product updated" : "Product added",
+          description: "Changes saved successfully.",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Something went wrong.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Form submission failed", error)
+      toast({
+        title: "Error",
+        description: "Unexpected error occurred.",
+        variant: "destructive",
+      })
+    }
   }
 
   const getStatusBadge = (product: Product) =>
@@ -133,47 +177,11 @@ const fetchClothingTypes = async () => {
           <DialogHeader>
             <DialogTitle>{isEditing ? "Edit Clothing Item" : "Add New Clothing Item"}</DialogTitle>
           </DialogHeader>
-
-          <ProductForm
+       <ProductForm
             initialData={editProductData || {}}
-            onSubmit={async (data) => {
-              const res = await fetch(
-                isEditing ? `/api/admin/products/${editProductData?.id}` : "/api/admin/products",
-                {
-                  method: isEditing ? "PUT" : "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(data),
-                }
-              )
-
-              if (res.ok) {
-                setIsDialogOpen(false)
-                setEditProductData(null)
-                setIsEditing(false)
-                fetchProducts(selectedCategory, searchTerm, page)
-                toast({
-                  title: isEditing ? "Product updated" : "Product added",
-                  description: "Changes saved successfully.",
-                })
-              } else {
-                toast({
-                  title: "Error",
-                  description: "Something went wrong.",
-                  variant: "destructive",
-                })
-              }
-            }}
+            onSubmit={handleFormSubmit}
+            clothingTypes={clothingTypes}
           />
-
-          <DialogFooter>
-            {/* <Button
-              type="submit"
-              form="product-form"
-              className="w-full bg-[#c9a55c] hover:bg-[#b08d4a] rounded-[255px_15px_225px_15px/15px_225px_15px_255px] border-2 border-[#c9a55c]"
-            >
-              {isEditing ? "Update Product" : "Add Product"}
-            </Button> */}
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     
@@ -211,6 +219,22 @@ const fetchClothingTypes = async () => {
           </Select>
         </div>
       </div>
+
+          <div className="flex items-center space-x-2">
+      <input
+        type="checkbox"
+        id="showOnlyDrafts"
+        checked={showOnlyDrafts}
+        onChange={(e) => {
+          setShowOnlyDrafts(e.target.checked)
+          setPage(1)
+        }}
+        className="rounded border-gray-400"
+      />
+      <label htmlFor="showOnlyDrafts" className="text-sm text-gray-700">
+        Show only draft items
+      </label>
+    </div>
 
       {error && <div className="mb-6 p-4 bg-red-100 text-red-800 rounded">{error}</div>}
 

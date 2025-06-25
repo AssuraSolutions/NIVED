@@ -57,11 +57,11 @@ export async function GET(request: Request) {
       ]
     }
 
-      // if (isPublished === "published") {
-      //   where.isPublished = true
-      // } else if (isPublished === "unpublished") {
-      //   where.isPublished = false
-      // }
+    if (isPublished === "true") {
+        where.isPublished = true
+      } else if (isPublished === "false") {
+        where.isPublished = false
+      }
 
   const [products, totalCount] = await Promise.all([
       prisma.product.findMany({
