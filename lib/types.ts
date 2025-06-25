@@ -16,6 +16,7 @@ export interface Product {
 
   // Relation field
   clothingTypeId: number;
+  clothingType?: { id: number; label: string }
 }
 
 export type CartItem = {
